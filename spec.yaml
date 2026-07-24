@@ -1,11 +1,508 @@
 id: patrol_track_density_map
 
 requirements:
-  - name: "ecoscope-platform"
-    version: ">=2.15.0, <2.16.0"
-    channel: "https://repo.prefix.dev/ecoscope-workflows/"
-  - name: "ecoscope-workflows-ext-custom"
-    version: "0.1.0rc14"
-    channel: "https://repo.prefix.dev/ecoscope-workflows-custom/"
+  # ecoscope-platform 2.16.3 is the release that carries the patrol coverage /
+  # density-weighting tasks (wildlife-dynamics/ecoscope#749).
+  - name: ecoscope-platform
+    version: ">=2.16.3, <2.17.0"
+    channel: https://repo.prefix.dev/ecoscope-workflows/
+  - name: ecoscope-workflows-ext-custom
+    version: 0.1.0rc18
+    channel: https://repo.prefix.dev/ecoscope-workflows-custom/
+  # ecoscope-platform/ext-custom require pydeck ==0.9.2, but the custom channel
+  # hosts a stub pydeck 0.0.x that shadows conda-forge under strict channel
+  # priority. Route pydeck to conda-forge explicitly (same pattern as
+  # patrol-efforts and wt-download-patrols).
+  - name: pydeck
+    version: "0.9.2"
+    channel: conda-forge
 
-workflow: []
+rjsf-overrides:
+  properties:
+    # Patrols are fetched with the combined patrols+events params task (same ER
+    # query logic as patrol-efforts); event_types is partial-bound to [] so the
+    # form only shows patrol types.
+    "Patrol Types.properties.er_patrol_params.properties.patrol_types.ecoscope:transform":
+      - transformer: EarthRangerEnumResolver
+        transformer_kws:
+          type: patrol_type
+          depends_on: properties.er_client_name.properties.data_source.properties.name
+    "Patrol Types.properties.er_patrol_params.title": ""
+    "Patrol Types.properties.er_patrol_params.properties.patrol_types.description": >-
+      Specify the patrol type(s) to analyze (optional). Leave this section empty to analyze all patrol types.
+
+    # --- Group Data: grouper override (labeled Category dropdown + Time) ---
+    "Group Data.properties.groupers.title": ""
+    "Group Data.properties.groupers.properties.groupers.description": ""
+    "Group Data.properties.groupers.properties.groupers.items.anyOf":
+      - {"$ref": "#/$defs/ValueGrouper"}
+      - {"$ref": "#/$defs/TemporalGrouper"}
+
+    "base_map_defs.properties.base_maps.default":
+      - url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}"
+        opacity: 1.0
+      - url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+        opacity: 0.5
+
+    # --- Patrol Track Density Map: density calculation (time vs distance) ---
+    "Patrol Track Density Map.properties.density_weighting.title": ""
+    "Patrol Track Density Map.properties.density_weighting.properties.density_sum_column.title": "Density Calculation"
+    "Patrol Track Density Map.properties.density_weighting.properties.density_sum_column.description": "Weight each grid cell by total patrol time (hours) or distance traveled (km)."
+    "Patrol Track Density Map.properties.density_weighting.properties.density_sum_column.default": "timespan_seconds"
+    # Time/Distance option labels come from the task schema (labeled_weighting).
+    "Patrol Track Density Map.properties.density_grid_options.title": ""
+
+    # --- Filter Data: patrol track filters ---
+    "Filter Data.properties.patrol_filters.title": ""
+    "Filter Data.properties.patrol_filters.properties.bounding_box.description": >-
+      Only include patrol observations whose coordinates fall inside this bounding box.
+    "Filter Data.properties.patrol_filters.properties.filter_point_coords.description": >-
+      Exclude observations recorded at these exact coordinates (e.g. known bad GPS fixes).
+    "Filter Data.properties.patrol_filters.properties.trajectory_segment_filter.description": >-
+      Drop trajectory segments outside these length / time / speed bounds (e.g. to remove
+      implausible jumps).
+
+  $defs:
+    ValueGrouper:
+      title: "Category"
+      type: "object"
+      properties:
+        index_name:
+          title: "Index Name"
+          type: "string"
+          oneOf:
+            # patrol_type__value: the trajectory branch keeps that column name
+            # after the extra__ prefix rename (patrol-efforts pattern).
+            - const: "patrol_serial_number"
+              title: "Patrol Serial Number"
+            - const: "patrol_type__value"
+              title: "Patrol Type"
+            - const: "patrol_subject"
+              title: "Patrol Subject"
+
+  uiSchema:
+    Patrol Types.er_patrol_params.patrol_types.items.ui:help: >-
+      If you are on Ecoscope Desktop, "Patrol Type" values can be found in your EarthRanger Admin site under Activity → Patrol Types.
+    base_map_defs.base_maps.items.ui:options.label: false
+    Filter Data.patrol_filters.filter_point_coords.items.ui:options.label: false
+    # Grid Cell Size union: hide the per-branch heading + duplicate inner
+    # discriminator select (same pattern as patrol-efforts / patrols).
+    "Patrol Track Density Map.density_grid_options.auto_scale_or_custom_cell_size":
+      anyOf:
+        - ui:help: Auto-scale for an optimized grid cell size based on the workflow data or Customize to set a specific grid cell size.
+          ui:options:
+            label: false
+          auto_scale_or_custom:
+            ui:widget: hidden
+        - ui:options:
+            label: false
+          auto_scale_or_custom:
+            ui:widget: hidden
+      auto_scale_or_custom:
+        ui:widget: hidden
+
+task-instance-defaults:
+  skipif:
+    conditions:
+      - any_is_empty_df
+      - any_dependency_skipped
+
+workflow:
+  # ---------- Setup ----------
+  - name: Workflow Details
+    id: workflow_details
+    task: set_workflow_details
+
+  - name: Data Source
+    id: er_client_name
+    task: set_er_connection
+
+  - name: Time Range
+    id: time_range
+    task: set_time_range
+    partial:
+      time_format: '%d %b %Y %H:%M:%S %Z'
+
+  - name: Extract Timezone Selection
+    id: get_timezone
+    task: get_timezone_from_time_range
+    partial:
+      time_range: ${{ workflow.time_range.return }}
+
+  # ---------- Data Fetching (patrols only) ----------
+  # Same ER query logic as patrol-efforts, with event_types bound to [] so no
+  # event params surface on the form and no events are unpacked downstream.
+  - title: Patrol Types
+    type: task-group
+    description: " "
+    tasks:
+      - name: Patrol Params
+        id: er_patrol_params
+        task: set_patrols_and_patrol_events_params
+        partial:
+          client: ${{ workflow.er_client_name.return }}
+          time_range: ${{ workflow.time_range.return }}
+          event_types: []
+          include_patrol_details: true
+          raise_on_empty: false
+          truncate_to_time_range: true
+          include_null_geometry: true
+          sub_page_size: 100
+
+      - name: Prefetch Patrols
+        id: prefetch_patrols
+        task: get_patrols_from_combined_params
+        partial:
+          combined_params: ${{ workflow.er_patrol_params.return }}
+
+      - name: Get Patrol Observations
+        id: patrol_obs
+        task: get_patrol_observations_from_patrols_df_and_combined_params
+        partial:
+          patrols_df: ${{ workflow.prefetch_patrols.return }}
+          combined_params: ${{ workflow.er_patrol_params.return }}
+
+  # ---------- Filter Data (patrol tracks) ----------
+  - title: Filter Data
+    type: task-group
+    description: " "
+    tasks:
+      - name: Filters
+        id: patrol_filters
+        task: set_traj_filters
+
+  # Split the combined filter config into the pieces each consumer needs.
+  - name: Split Bounding Box
+    id: bounding_box
+    task: get_bounding_box
+    partial:
+      filters: ${{ workflow.patrol_filters.return }}
+
+  - name: Split Point Coordinates
+    id: filter_point_coords
+    task: get_filter_point_coords
+    partial:
+      filters: ${{ workflow.patrol_filters.return }}
+
+  - name: Split Segment Filter
+    id: segment_filter
+    task: get_segment_filter
+    partial:
+      filters: ${{ workflow.patrol_filters.return }}
+
+  # Dashboard groupers (default [] -> single view).
+  - title: Group Data
+    type: task-group
+    description: >-
+      Configure how patrol tracks are grouped (by category or temporal index) and
+      split into per-group dashboard views.
+    tasks:
+      - name: Group Data
+        id: groupers
+        task: set_groupers
+
+  # Standalone card — base layers for the density map.
+  - name: Map Base Layers
+    id: base_map_defs
+    task: set_base_maps
+
+  # ---------- Patrol Track Density Map settings ----------
+  - title: Patrol Track Density Map
+    type: task-group
+    description: "Grid heatmap of patrol track density."
+    tasks:
+      - name: Density Weighting
+        id: density_weighting
+        task: set_patrol_weighting_spec
+        # density_sum_column is NOT in partial -> user-facing (Density Calculation).
+
+      - name: Density Weighting Column
+        id: weighting_column
+        task: get_weighting_column
+        # fully bound -> nothing user-facing; bridges the WeightingSpec to
+        # calculate_feature_density's sum_column.
+        partial:
+          weighting_spec: ${{ workflow.density_weighting.return }}
+
+      - name: Density Grid Options
+        id: density_grid_options
+        task: set_density_grid_options
+        # opacity / cell size / crs are all ecoscope:advanced -> the card's single
+        # Advanced Configurations accordion.
+        partial:
+          intersecting_only: false
+
+  # Invisible extractor: opacity for the heatmap polygon layer.
+  - name: Heatmap Layer Opacity
+    id: heatmap_opacity
+    task: get_opacity_from_combined_params
+    partial:
+      combined_params: ${{ workflow.density_grid_options.return }}
+
+  - name: Density Map Title
+    id: set_density_map_title
+    task: set_string_var
+    partial:
+      var: "Patrol Track Density Map"
+
+  # ---------- Process Patrols ----------
+  - title: Process Patrols
+    type: task-group
+    description: "Convert patrol observations to trajectory segments."
+    tasks:
+      - name: Convert Patrols to Timezone
+        id: convert_patrols_tz
+        task: convert_values_to_timezone
+        partial:
+          df: ${{ workflow.patrol_obs.return }}
+          timezone: ${{ workflow.get_timezone.return }}
+          columns:
+            - patrol_start_time
+            - patrol_end_time
+            - fixtime
+
+      # Coordinate/bounding-box filter from the shared Filter Data card.
+      - name: Filter Patrol Observations
+        id: filter_patrol_obs
+        task: apply_reloc_coord_filter
+        partial:
+          df: ${{ workflow.convert_patrols_tz.return }}
+          bounding_box: ${{ workflow.bounding_box.return }}
+          filter_point_coords: ${{ workflow.filter_point_coords.return }}
+          roi_gdf: null
+          roi_name: null
+          reset_index: false
+
+      # Trajectory segment filter from the same shared Filter Data card.
+      - name: Relocations to Trajectory
+        id: patrol_traj
+        task: relocations_to_trajectory
+        partial:
+          relocations: ${{ workflow.filter_patrol_obs.return }}
+          trajectory_segment_filter: ${{ workflow.segment_filter.return }}
+
+      - name: Rename Trajectory Columns
+        id: traj_rename_cols
+        task: map_columns
+        partial:
+          df: ${{ workflow.patrol_traj.return }}
+          drop_columns: []
+          retain_columns: []
+          rename_columns:
+            extra__patrol_subject: patrol_subject
+            extra__patrol_id: patrol_id
+            extra__patrol_serial_number: patrol_serial_number
+            extra__patrol_type__value: patrol_type__value
+            extra__patrol_status: patrol_status
+          raise_if_not_found: false   # patrol_type__value / patrol_status only needed if used as category
+
+      # Temporal index so Time groupers from the Group Data card can split the
+      # tracks (no-op when no temporal grouper is set).
+      - name: Add Temporal Index to Patrol Tracks
+        id: traj_add_temporal_index
+        task: add_temporal_index
+        partial:
+          df: ${{ workflow.traj_rename_cols.return }}
+          time_col: segment_start
+          groupers: ${{ workflow.groupers.return }}
+          cast_to_datetime: true
+          format: mixed
+
+  # Serial numbers are ints — cast the grouper category columns to string
+  # before split (patrol-efforts pattern).
+  - name: Cast Patrol Track Columns
+    id: traj_cols_to_string
+    task: convert_column_values_to_string
+    partial:
+      df: ${{ workflow.traj_add_temporal_index.return }}
+      columns: ["patrol_serial_number", "patrol_type__value"]
+
+  - name: Split Patrol Tracks by Group
+    id: split_traj_groups
+    task: split_groups
+    partial:
+      df: ${{ workflow.traj_cols_to_string.return }}
+      groupers: ${{ workflow.groupers.return }}
+
+  # ---------- Patrol Track Density Map (gridded time/distance density) ----------
+  - title: Patrol Track Density Map
+    type: task-group
+    description: "Grid heatmap of patrol track density, weighted by total time or distance per cell."
+    tasks:
+      - name: Density Meshgrid
+        id: density_meshgrid
+        task: call_meshgrid_from_combined_params
+        skipif:
+          conditions:
+            - any_is_empty_df
+            - any_dependency_skipped
+            - all_geometry_are_none
+        partial:
+          aoi: ${{ workflow.traj_add_temporal_index.return }}
+          combined_params: ${{ workflow.density_grid_options.return }}
+
+      - name: Calculate Track Density per Cell
+        id: grouped_track_density
+        task: calculate_feature_density
+        partial:
+          meshgrid: ${{ workflow.density_meshgrid.return }}
+          geometry_type: line
+          sum_column: ${{ workflow.weighting_column.return }}
+        mapvalues:
+          argnames: geodataframe
+          argvalues: ${{ workflow.split_traj_groups.return }}
+
+      - name: Normalize Density Units
+        id: density_normalized
+        task: normalize_density_units
+        partial:
+          weighting_spec: ${{ workflow.density_weighting.return }}
+        mapvalues:
+          argnames: df
+          argvalues: ${{ workflow.grouped_track_density.return }}
+
+      - name: Density Legend Title
+        id: density_legend_title
+        task: get_density_legend_title
+        partial:
+          weighting_spec: ${{ workflow.density_weighting.return }}
+
+      - name: Sort Density Values
+        id: density_sorted
+        task: sort_values
+        partial:
+          column_name: density
+          ascending: true
+          na_position: last
+        mapvalues:
+          argnames: df
+          argvalues: ${{ workflow.density_normalized.return }}
+
+      - name: Drop NaN Density Cells
+        id: density_drop_nan
+        task: drop_nan_values_by_column
+        partial:
+          column_name: density
+        mapvalues:
+          argnames: df
+          argvalues: ${{ workflow.density_sorted.return }}
+
+      - name: Classify Density Values
+        id: density_classify
+        task: apply_classification
+        partial:
+          input_column_name: density
+          output_column_name: density_bins
+          classification_options:
+            scheme: equal_interval
+            k: 10
+          label_options:
+            label_ranges: true
+            label_decimals: 1
+        mapvalues:
+          argnames: df
+          argvalues: ${{ workflow.density_drop_nan.return }}
+
+      - name: Density Colormap
+        id: density_colormap
+        task: apply_color_map
+        partial:
+          input_column_name: density_bins
+          colormap: RdYlGn_r
+          output_column_name: density_colormap
+        mapvalues:
+          argnames: df
+          argvalues: ${{ workflow.density_classify.return }}
+
+      - name: Rename Density Output
+        id: density_rename
+        task: map_columns
+        partial:
+          drop_columns: []
+          retain_columns: []
+          rename_columns:
+            density: "Patrol Effort"
+          raise_if_not_found: true
+        mapvalues:
+          argnames: df
+          argvalues: ${{ workflow.density_colormap.return }}
+
+      - name: Create Density Polygon Layer
+        id: density_layer
+        task: create_polygon_layer
+        skipif:
+          conditions:
+            - any_is_empty_df
+            - any_dependency_skipped
+            - all_geometry_are_none
+        partial:
+          layer_style:
+            fill_color_column: density_colormap
+            get_line_width: 0
+            opacity: ${{ workflow.heatmap_opacity.return }}
+          legend:
+            label_column: density_bins
+            color_column: density_colormap
+          tooltip_columns:
+            - "Patrol Effort"
+        mapvalues:
+          argnames: geodataframe
+          argvalues: ${{ workflow.density_rename.return }}
+
+      - name: Draw Density Ecomap
+        id: density_ecomap
+        task: draw_ecomap
+        partial:
+          title: null
+          tile_layers: ${{ workflow.base_map_defs.return }}
+          north_arrow_style:
+            placement: top-left
+          legend_style:
+            title: ${{ workflow.density_legend_title.return }}
+            format_title: false
+            placement: bottom-right
+          static: false
+          max_zoom: 20
+          widget_id: ${{ workflow.set_density_map_title.return }}
+        mapvalues:
+          argnames: geo_layers
+          argvalues: ${{ workflow.density_layer.return }}
+
+      - name: Persist Density Ecomap
+        id: density_html
+        task: persist_text
+        partial:
+          root_path: ${{ env.ECOSCOPE_WORKFLOWS_RESULTS }}
+          filename_suffix: density_map
+        mapvalues:
+          argnames: text
+          argvalues: ${{ workflow.density_ecomap.return }}
+
+      - name: Create Density Map Widget
+        id: density_widget
+        task: create_map_widget_single_view
+        skipif:
+          conditions:
+            - never
+        partial:
+          title: ${{ workflow.set_density_map_title.return }}
+        map:
+          argnames: [view, data]
+          argvalues: ${{ workflow.density_html.return }}
+
+      - name: Merge Density Views
+        id: density_widget_merged
+        task: merge_widget_views
+        partial:
+          widgets: ${{ workflow.density_widget.return }}
+
+  # ---------- Dashboard ----------
+  - name: Create Dashboard
+    id: density_dashboard
+    task: gather_dashboard
+    partial:
+      details: ${{ workflow.workflow_details.return }}
+      widgets:
+        - ${{ workflow.density_widget_merged.return }}
+      groupers: ${{ workflow.groupers.return }}
+      time_range: ${{ workflow.time_range.return }}
