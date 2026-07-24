@@ -1,10 +1,15 @@
 id: patrol_track_density_map
 
 requirements:
-  # ecoscope-platform 2.16.3 is the release that carries the patrol coverage /
-  # density-weighting tasks (wildlife-dynamics/ecoscope#749).
-  - name: ecoscope-platform
-    version: ">=2.16.3, <2.17.0"
+  # DEV MODE: editable local ecoscope (platform extra) for verifying the
+  # Normalised (LTD) weighting; lonboard pinned so strict channel priority
+  # doesn't exclude the 0.0.8 build ecoscope requires (mt-patrols pattern).
+  - name: ecoscope
+    path: /Users/yunwu/MEP/wt-tasks/ecoscope
+    editable: true
+    extras: ["platform", "mapping", "analysis"]
+  - name: lonboard
+    version: "==0.0.8"
     channel: https://repo.prefix.dev/ecoscope-workflows/
   - name: ecoscope-workflows-ext-custom
     version: 0.1.0rc18
@@ -44,10 +49,12 @@ rjsf-overrides:
       - url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
         opacity: 0.5
 
-    # --- Patrol Track Density Map: density calculation (time vs distance) ---
+    # --- Patrol Track Density Map: density calculation (time / distance / LTD) ---
     "Patrol Track Density Map.properties.density_weighting.title": ""
     "Patrol Track Density Map.properties.density_weighting.properties.density_sum_column.title": "Density Calculation"
-    "Patrol Track Density Map.properties.density_weighting.properties.density_sum_column.description": "Weight each grid cell by total patrol time (hours) or distance traveled (km)."
+    "Patrol Track Density Map.properties.density_weighting.properties.density_sum_column.description": >-
+      Weight each grid cell by total patrol time (hours) or distance traveled (km),
+      or show normalised linear time density (LTD) as percentiles of total patrol time.
     "Patrol Track Density Map.properties.density_weighting.properties.density_sum_column.default": "timespan_seconds"
     # Time/Distance option labels come from the task schema (labeled_weighting).
     "Patrol Track Density Map.properties.density_grid_options.title": ""
@@ -169,24 +176,24 @@ workflow:
     tasks:
       - name: Filters
         id: patrol_filters
-        task: set_traj_filters
+        task: ecoscope_workflows_ext_custom.tasks.config.set_traj_filters
 
   # Split the combined filter config into the pieces each consumer needs.
   - name: Split Bounding Box
     id: bounding_box
-    task: get_bounding_box
+    task: ecoscope_workflows_ext_custom.tasks.config.get_bounding_box
     partial:
       filters: ${{ workflow.patrol_filters.return }}
 
   - name: Split Point Coordinates
     id: filter_point_coords
-    task: get_filter_point_coords
+    task: ecoscope_workflows_ext_custom.tasks.config.get_filter_point_coords
     partial:
       filters: ${{ workflow.patrol_filters.return }}
 
   - name: Split Segment Filter
     id: segment_filter
-    task: get_segment_filter
+    task: ecoscope_workflows_ext_custom.tasks.config.get_segment_filter
     partial:
       filters: ${{ workflow.patrol_filters.return }}
 
@@ -215,14 +222,6 @@ workflow:
         id: density_weighting
         task: set_patrol_weighting_spec
         # density_sum_column is NOT in partial -> user-facing (Density Calculation).
-
-      - name: Density Weighting Column
-        id: weighting_column
-        task: get_weighting_column
-        # fully bound -> nothing user-facing; bridges the WeightingSpec to
-        # calculate_feature_density's sum_column.
-        partial:
-          weighting_spec: ${{ workflow.density_weighting.return }}
 
       - name: Density Grid Options
         id: density_grid_options
@@ -341,67 +340,21 @@ workflow:
           aoi: ${{ workflow.traj_add_temporal_index.return }}
           combined_params: ${{ workflow.density_grid_options.return }}
 
-      - name: Calculate Track Density per Cell
-        id: grouped_track_density
-        task: calculate_feature_density
+      - name: Calculate Classified Track Density per Cell
+        id: density_classify
+        task: calculate_classified_track_density
         partial:
           meshgrid: ${{ workflow.density_meshgrid.return }}
-          geometry_type: line
-          sum_column: ${{ workflow.weighting_column.return }}
+          weighting_spec: ${{ workflow.density_weighting.return }}
         mapvalues:
           argnames: geodataframe
           argvalues: ${{ workflow.split_traj_groups.return }}
-
-      - name: Normalize Density Units
-        id: density_normalized
-        task: normalize_density_units
-        partial:
-          weighting_spec: ${{ workflow.density_weighting.return }}
-        mapvalues:
-          argnames: df
-          argvalues: ${{ workflow.grouped_track_density.return }}
 
       - name: Density Legend Title
         id: density_legend_title
         task: get_density_legend_title
         partial:
           weighting_spec: ${{ workflow.density_weighting.return }}
-
-      - name: Sort Density Values
-        id: density_sorted
-        task: sort_values
-        partial:
-          column_name: density
-          ascending: true
-          na_position: last
-        mapvalues:
-          argnames: df
-          argvalues: ${{ workflow.density_normalized.return }}
-
-      - name: Drop NaN Density Cells
-        id: density_drop_nan
-        task: drop_nan_values_by_column
-        partial:
-          column_name: density
-        mapvalues:
-          argnames: df
-          argvalues: ${{ workflow.density_sorted.return }}
-
-      - name: Classify Density Values
-        id: density_classify
-        task: apply_classification
-        partial:
-          input_column_name: density
-          output_column_name: density_bins
-          classification_options:
-            scheme: equal_interval
-            k: 10
-          label_options:
-            label_ranges: true
-            label_decimals: 1
-        mapvalues:
-          argnames: df
-          argvalues: ${{ workflow.density_drop_nan.return }}
 
       - name: Density Colormap
         id: density_colormap

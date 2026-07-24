@@ -405,7 +405,7 @@
           "default": "timespan_seconds",
           "title": "Density Sum Column",
           "type": "string",
-          "description": "Weight each grid cell by total patrol time or distance travelled.",
+          "description": "Weight each grid cell by total patrol time or distance travelled, or by time normalised as a percentage of the total (LTD).",
           "oneOf": [
             {
               "const": "timespan_seconds",
@@ -414,6 +414,10 @@
             {
               "const": "dist_meters",
               "title": "Distance"
+            },
+            {
+              "const": "normalised_ltd",
+              "title": "Normalised (LTD)"
             }
           ]
         }

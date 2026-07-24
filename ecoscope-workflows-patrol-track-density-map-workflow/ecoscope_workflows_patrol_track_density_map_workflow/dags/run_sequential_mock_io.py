@@ -42,16 +42,10 @@ get_patrol_observations_from_patrols_df_and_combined_params = (
     )
 )  # 🧪
 from ecoscope.platform.tasks.analysis import (
-    calculate_feature_density as calculate_feature_density,
+    calculate_classified_track_density as calculate_classified_track_density,
 )
 from ecoscope.platform.tasks.analysis import (
     get_density_legend_title as get_density_legend_title,
-)
-from ecoscope.platform.tasks.analysis import (
-    get_weighting_column as get_weighting_column,
-)
-from ecoscope.platform.tasks.analysis import (
-    normalize_density_units as normalize_density_units,
 )
 from ecoscope.platform.tasks.analysis import (
     set_patrol_weighting_spec as set_patrol_weighting_spec,
@@ -85,9 +79,6 @@ from ecoscope.platform.tasks.skip import never as never
 from ecoscope.platform.tasks.transformation import (
     add_temporal_index as add_temporal_index,
 )
-from ecoscope.platform.tasks.transformation import (
-    apply_classification as apply_classification,
-)
 from ecoscope.platform.tasks.transformation import apply_color_map as apply_color_map
 from ecoscope.platform.tasks.transformation import (
     apply_reloc_coord_filter as apply_reloc_coord_filter,
@@ -98,22 +89,18 @@ from ecoscope.platform.tasks.transformation import (
 from ecoscope.platform.tasks.transformation import (
     convert_values_to_timezone as convert_values_to_timezone,
 )
-from ecoscope.platform.tasks.transformation import (
-    drop_nan_values_by_column as drop_nan_values_by_column,
-)
 from ecoscope.platform.tasks.transformation import map_columns as map_columns
-from ecoscope.platform.tasks.transformation import sort_values as sort_values
 from ecoscope_workflows_ext_custom.tasks.config import (
-    get_bounding_box as get_bounding_box,
+    get_bounding_box as get_bounding_box_1,
 )
 from ecoscope_workflows_ext_custom.tasks.config import (
-    get_filter_point_coords as get_filter_point_coords,
+    get_filter_point_coords as get_filter_point_coords_1,
 )
 from ecoscope_workflows_ext_custom.tasks.config import (
-    get_segment_filter as get_segment_filter,
+    get_segment_filter as get_segment_filter_1,
 )
 from ecoscope_workflows_ext_custom.tasks.config import (
-    set_traj_filters as set_traj_filters,
+    set_traj_filters as set_traj_filters_1,
 )
 
 
@@ -259,7 +246,7 @@ def main(params: dict[str, Any], validate_params_schema: bool = True):
     )
 
     patrol_filters = (
-        task(set_traj_filters)
+        task(set_traj_filters_1)
         .validate()
         .set_task_instance_id("patrol_filters")
         .handle_errors()
@@ -276,7 +263,7 @@ def main(params: dict[str, Any], validate_params_schema: bool = True):
     )
 
     bounding_box = (
-        task(get_bounding_box)
+        task(get_bounding_box_1)
         .validate()
         .set_task_instance_id("bounding_box")
         .handle_errors()
@@ -293,7 +280,7 @@ def main(params: dict[str, Any], validate_params_schema: bool = True):
     )
 
     filter_point_coords = (
-        task(get_filter_point_coords)
+        task(get_filter_point_coords_1)
         .validate()
         .set_task_instance_id("filter_point_coords")
         .handle_errors()
@@ -310,7 +297,7 @@ def main(params: dict[str, Any], validate_params_schema: bool = True):
     )
 
     segment_filter = (
-        task(get_segment_filter)
+        task(get_segment_filter_1)
         .validate()
         .set_task_instance_id("segment_filter")
         .handle_errors()
@@ -374,25 +361,6 @@ def main(params: dict[str, Any], validate_params_schema: bool = True):
             unpack_depth=1,
         )
         .partial(**(params.get("density_weighting") or {}))
-        .call()
-    )
-
-    weighting_column = (
-        task(get_weighting_column)
-        .validate()
-        .set_task_instance_id("weighting_column")
-        .handle_errors()
-        .with_tracing()
-        .skipif(
-            conditions=[
-                any_is_empty_df,
-                any_dependency_skipped,
-            ],
-            unpack_depth=1,
-        )
-        .partial(
-            weighting_spec=density_weighting, **(params.get("weighting_column") or {})
-        )
         .call()
     )
 
@@ -639,10 +607,10 @@ def main(params: dict[str, Any], validate_params_schema: bool = True):
         .call()
     )
 
-    grouped_track_density = (
-        task(calculate_feature_density)
+    density_classify = (
+        task(calculate_classified_track_density)
         .validate()
-        .set_task_instance_id("grouped_track_density")
+        .set_task_instance_id("density_classify")
         .handle_errors()
         .with_tracing()
         .skipif(
@@ -654,30 +622,10 @@ def main(params: dict[str, Any], validate_params_schema: bool = True):
         )
         .partial(
             meshgrid=density_meshgrid,
-            geometry_type="line",
-            sum_column=weighting_column,
-            **(params.get("grouped_track_density") or {}),
+            weighting_spec=density_weighting,
+            **(params.get("density_classify") or {}),
         )
         .mapvalues(argnames=["geodataframe"], argvalues=split_traj_groups)
-    )
-
-    density_normalized = (
-        task(normalize_density_units)
-        .validate()
-        .set_task_instance_id("density_normalized")
-        .handle_errors()
-        .with_tracing()
-        .skipif(
-            conditions=[
-                any_is_empty_df,
-                any_dependency_skipped,
-            ],
-            unpack_depth=1,
-        )
-        .partial(
-            weighting_spec=density_weighting, **(params.get("density_normalized") or {})
-        )
-        .mapvalues(argnames=["df"], argvalues=grouped_track_density)
     )
 
     density_legend_title = (
@@ -698,68 +646,6 @@ def main(params: dict[str, Any], validate_params_schema: bool = True):
             **(params.get("density_legend_title") or {}),
         )
         .call()
-    )
-
-    density_sorted = (
-        task(sort_values)
-        .validate()
-        .set_task_instance_id("density_sorted")
-        .handle_errors()
-        .with_tracing()
-        .skipif(
-            conditions=[
-                any_is_empty_df,
-                any_dependency_skipped,
-            ],
-            unpack_depth=1,
-        )
-        .partial(
-            column_name="density",
-            ascending=True,
-            na_position="last",
-            **(params.get("density_sorted") or {}),
-        )
-        .mapvalues(argnames=["df"], argvalues=density_normalized)
-    )
-
-    density_drop_nan = (
-        task(drop_nan_values_by_column)
-        .validate()
-        .set_task_instance_id("density_drop_nan")
-        .handle_errors()
-        .with_tracing()
-        .skipif(
-            conditions=[
-                any_is_empty_df,
-                any_dependency_skipped,
-            ],
-            unpack_depth=1,
-        )
-        .partial(column_name="density", **(params.get("density_drop_nan") or {}))
-        .mapvalues(argnames=["df"], argvalues=density_sorted)
-    )
-
-    density_classify = (
-        task(apply_classification)
-        .validate()
-        .set_task_instance_id("density_classify")
-        .handle_errors()
-        .with_tracing()
-        .skipif(
-            conditions=[
-                any_is_empty_df,
-                any_dependency_skipped,
-            ],
-            unpack_depth=1,
-        )
-        .partial(
-            input_column_name="density",
-            output_column_name="density_bins",
-            classification_options={"scheme": "equal_interval", "k": 10},
-            label_options={"label_ranges": True, "label_decimals": 1},
-            **(params.get("density_classify") or {}),
-        )
-        .mapvalues(argnames=["df"], argvalues=density_drop_nan)
     )
 
     density_colormap = (
