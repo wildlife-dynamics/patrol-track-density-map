@@ -196,3 +196,36 @@ ltd:
       base_maps:
         - url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}"
           opacity: 1.0
+
+ltd-percentiles:
+  name: Normalised LTD Custom Percentiles
+  description: >-
+    Mocked IO — LTD mode with custom Percentile Levels (the conditional field
+    revealed when Normalised (LTD) is selected).
+  mock_io: true
+  params:
+    workflow_details:
+      name: "Patrol Track Density Map"
+      description: "Gridded density map of patrol tracks."
+    er_client_name:
+      data_source:
+        name: "er_asia"
+    time_range:
+      since: "2015-01-10T00:00:00"
+      until: "2015-02-28T23:59:59"
+      timezone:
+        label: "UTC (UTC+00:00)"
+        tzCode: "UTC"
+        name: "(UTC+00:00) UTC"
+        utc: "+00:00"
+    er_patrol_params:
+      patrol_types: ["demo_patrol"]
+    groupers:
+      groupers: []
+    density_weighting:
+      density_sum_column: normalised_ltd
+      percentiles: ["50", "90", "100"]
+    base_map_defs:
+      base_maps:
+        - url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}"
+          opacity: 1.0

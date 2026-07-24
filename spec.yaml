@@ -4,8 +4,11 @@ requirements:
   # DEV MODE: editable local ecoscope (platform extra) for verifying the
   # Normalised (LTD) weighting; lonboard pinned so strict channel priority
   # doesn't exclude the 0.0.8 build ecoscope requires (mt-patrols pattern).
+  # Points at a git worktree of the ltd-patrol-density-weighting branch so the
+  # main ~/MEP/wt-tasks/ecoscope checkout stays free for other work
+  # (`git worktree remove ecoscope-ltd` there once the branch merges).
   - name: ecoscope
-    path: /Users/yunwu/MEP/wt-tasks/ecoscope
+    path: /Users/yunwu/MEP/wt-tasks/ecoscope-ltd
     editable: true
     extras: ["platform", "mapping", "analysis"]
   - name: lonboard
@@ -50,13 +53,44 @@ rjsf-overrides:
         opacity: 0.5
 
     # --- Patrol Track Density Map: density calculation (time / distance / LTD) ---
-    "Patrol Track Density Map.properties.density_weighting.title": ""
-    "Patrol Track Density Map.properties.density_weighting.properties.density_sum_column.title": "Density Calculation"
-    "Patrol Track Density Map.properties.density_weighting.properties.density_sum_column.description": >-
-      Weight each grid cell by total patrol time (hours) or distance traveled (km),
-      or show normalised linear time density (LTD) as percentiles of total patrol time.
-    "Patrol Track Density Map.properties.density_weighting.properties.density_sum_column.default": "timespan_seconds"
-    # Time/Distance option labels come from the task schema (labeled_weighting).
+    # Restated wholesale to gate Percentile Levels behind the Normalised (LTD)
+    # selection via allOf/if/then — the only conditional-field shape valid for
+    # both the RJSF renderer and the server's 2020-12 validator. Do NOT add
+    # `dependencies`, `additionalProperties`, `unevaluatedProperties`, or a
+    # `default` on the conditional field — each breaks a different layer
+    # (see wt-download-subjects' download_params block for the precedent).
+    "Patrol Track Density Map.properties.density_weighting":
+      title: ""
+      type: object
+      required: []
+      properties:
+        density_sum_column:
+          title: "Density Calculation"
+          description: >-
+            Weight each grid cell by total patrol time (hours) or distance traveled (km),
+            or show normalised linear time density (LTD) as percentiles of total patrol time.
+          type: string
+          default: "timespan_seconds"
+          oneOf:
+            - {const: "timespan_seconds", title: "Time"}
+            - {const: "dist_meters", title: "Distance"}
+            - {const: "normalised_ltd", title: "Normalised (LTD)"}
+      allOf:
+        - if:
+            properties:
+              density_sum_column:
+                const: "normalised_ltd"
+          then:
+            properties:
+              percentiles:
+                title: "Percentile Levels"
+                description: "Choose the time density percentile bins to display."
+                type: array
+                uniqueItems: true
+                minItems: 1
+                items:
+                  type: string
+                  enum: ["50", "60", "70", "80", "90", "95", "99", "99.999", "100"]
     "Patrol Track Density Map.properties.density_grid_options.title": ""
 
     # --- Filter Data: patrol track filters ---

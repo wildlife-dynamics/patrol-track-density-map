@@ -427,13 +427,15 @@
       "ecoscope:task_group": true,
       "properties": {
         "density_weighting": {
-          "additionalProperties": false,
+          "title": "",
+          "type": "object",
+          "required": [],
           "properties": {
             "density_sum_column": {
-              "default": "timespan_seconds",
               "title": "Density Calculation",
-              "type": "string",
               "description": "Weight each grid cell by total patrol time (hours) or distance traveled (km), or show normalised linear time density (LTD) as percentiles of total patrol time.",
+              "type": "string",
+              "default": "timespan_seconds",
               "oneOf": [
                 {
                   "const": "timespan_seconds",
@@ -450,9 +452,42 @@
               ]
             }
           },
-          "type": "object",
-          "required": [],
-          "title": ""
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "density_sum_column": {
+                    "const": "normalised_ltd"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "percentiles": {
+                    "title": "Percentile Levels",
+                    "description": "Choose the time density percentile bins to display.",
+                    "type": "array",
+                    "uniqueItems": true,
+                    "minItems": 1,
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "50",
+                        "60",
+                        "70",
+                        "80",
+                        "90",
+                        "95",
+                        "99",
+                        "99.999",
+                        "100"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          ]
         },
         "density_grid_options": {
           "additionalProperties": false,
@@ -812,6 +847,12 @@
         "density_weighting",
         "density_grid_options"
       ],
+      "density_weighting": {
+        "ui:order": [
+          "density_sum_column",
+          "percentiles"
+        ]
+      },
       "density_grid_options": {
         "ui:order": [
           "opacity",
