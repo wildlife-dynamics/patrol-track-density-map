@@ -1,0 +1,11 @@
+id: patrol_track_density_map
+
+requirements:
+  - name: "ecoscope-platform"
+    version: ">=2.15.0, <2.16.0"
+    channel: "https://repo.prefix.dev/ecoscope-workflows/"
+  - name: "ecoscope-workflows-ext-custom"
+    version: "0.1.0rc14"
+    channel: "https://repo.prefix.dev/ecoscope-workflows-custom/"
+
+workflow: []
