@@ -427,15 +427,13 @@
       "ecoscope:task_group": true,
       "properties": {
         "density_weighting": {
-          "title": "",
-          "type": "object",
-          "required": [],
+          "additionalProperties": false,
           "properties": {
             "density_sum_column": {
-              "title": "Density Calculation",
-              "description": "Weight each grid cell by total patrol time (hours) or distance traveled (km), or show normalised linear time density (LTD) as percentiles of total patrol time.",
-              "type": "string",
               "default": "timespan_seconds",
+              "title": "Density Calculation",
+              "type": "string",
+              "description": "Weight each grid cell by total patrol time (hours) or distance traveled (km), or show normalised linear time density (LTD) as percentiles of total patrol time.",
               "oneOf": [
                 {
                   "const": "timespan_seconds",
@@ -450,44 +448,41 @@
                   "title": "Normalised (LTD)"
                 }
               ]
+            },
+            "percentiles": {
+              "default": [
+                "50",
+                "60",
+                "70",
+                "80",
+                "90",
+                "100"
+              ],
+              "items": {
+                "enum": [
+                  "50",
+                  "60",
+                  "70",
+                  "80",
+                  "90",
+                  "95",
+                  "99",
+                  "99.999",
+                  "100"
+                ],
+                "type": "string"
+              },
+              "title": "Percentile Levels",
+              "type": "array",
+              "description": "Choose the time density percentile bins to display. Only applies to the Normalised (LTD) density calculation.",
+              "uniqueItems": true,
+              "minItems": 1,
+              "ecoscope:advanced": true
             }
           },
-          "allOf": [
-            {
-              "if": {
-                "properties": {
-                  "density_sum_column": {
-                    "const": "normalised_ltd"
-                  }
-                }
-              },
-              "then": {
-                "properties": {
-                  "percentiles": {
-                    "title": "Percentile Levels",
-                    "description": "Choose the time density percentile bins to display.",
-                    "type": "array",
-                    "uniqueItems": true,
-                    "minItems": 1,
-                    "items": {
-                      "type": "string",
-                      "enum": [
-                        "50",
-                        "60",
-                        "70",
-                        "80",
-                        "90",
-                        "95",
-                        "99",
-                        "99.999",
-                        "100"
-                      ]
-                    }
-                  }
-                }
-              }
-            }
-          ]
+          "type": "object",
+          "required": [],
+          "title": ""
         },
         "density_grid_options": {
           "additionalProperties": false,
