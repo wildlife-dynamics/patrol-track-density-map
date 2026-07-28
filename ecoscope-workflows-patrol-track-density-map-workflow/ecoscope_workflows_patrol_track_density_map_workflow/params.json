@@ -690,6 +690,14 @@
                   "const": "normalised_ltd"
                 },
                 "percentiles": {
+                  "default": [
+                    "50",
+                    "60",
+                    "70",
+                    "80",
+                    "90",
+                    "100"
+                  ],
                   "description": "Choose the time density percentile bins to display.",
                   "items": {
                     "enum": [
@@ -714,7 +722,6 @@
           ]
         }
       },
-      "description": "Density calculation choice; selecting Normalised (LTD) reveals its percentile levels.",
       "properties": {
         "density_sum_column": {
           "default": "timespan_seconds",
