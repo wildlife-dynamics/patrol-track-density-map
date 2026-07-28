@@ -285,7 +285,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/mapclassify-2.10.0-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/markdown-it-py-4.2.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/markupsafe-3.0.3-py312h8a5da7c_1.conda
-      - conda: https://conda.anaconda.org/conda-forge/linux-64/matplotlib-base-3.11.1-py312hc1765e9_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/linux-64/matplotlib-base-3.11.1-py312h4c94fcb_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/matplotlib-inline-0.2.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/mdurl-0.1.2-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/minizip-4.2.2-hb71707f_0.conda
@@ -763,7 +763,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/mapclassify-2.10.0-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/markdown-it-py-4.2.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/markupsafe-3.0.3-py312hd077ced_1.conda
-      - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/matplotlib-base-3.11.1-py312h7ee55d7_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/matplotlib-base-3.11.1-py312h0683553_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/matplotlib-inline-0.2.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/mdurl-0.1.2-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/minizip-4.2.2-hd80d073_0.conda
@@ -1234,7 +1234,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/mapclassify-2.10.0-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/markdown-it-py-4.2.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/markupsafe-3.0.3-py312heb39f77_1.conda
-      - conda: https://conda.anaconda.org/conda-forge/osx-64/matplotlib-base-3.11.1-py312ha85c1d5_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-64/matplotlib-base-3.11.1-py312h0847896_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/matplotlib-inline-0.2.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/mdurl-0.1.2-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/minizip-4.2.1-he29b9bd_0.conda
@@ -1702,7 +1702,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/mapclassify-2.10.0-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/markdown-it-py-4.2.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/markupsafe-3.0.3-py312h04c11ed_1.conda
-      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/matplotlib-base-3.11.1-py312h3b4889c_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/matplotlib-base-3.11.1-py312h07c8dfe_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/matplotlib-inline-0.2.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/mdurl-0.1.2-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/minizip-4.2.2-hdb7fadc_0.conda
@@ -2162,7 +2162,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/mapclassify-2.10.0-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/markdown-it-py-4.2.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/markupsafe-3.0.3-py312h05f76fc_1.conda
-      - conda: https://conda.anaconda.org/conda-forge/win-64/matplotlib-base-3.11.1-py312hcbcab24_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/win-64/matplotlib-base-3.11.1-py312hf9659c1_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/matplotlib-inline-0.2.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/mdurl-0.1.2-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/minizip-4.2.2-h0ffbb96_0.conda
@@ -17869,9 +17869,9 @@ packages:
   license_family: BSD
   size: 28992
   timestamp: 1772445161959
-- conda: https://conda.anaconda.org/conda-forge/linux-64/matplotlib-base-3.11.1-py312hc1765e9_1.conda
-  sha256: d4bac2d6718ef954e98fa0b45003536b6aba0f943373826a5ee555a7e052266c
-  md5: c82e4c7f74cb5a5fcececce25e95a4fd
+- conda: https://conda.anaconda.org/conda-forge/linux-64/matplotlib-base-3.11.1-py312h4c94fcb_2.conda
+  sha256: 8596841a7adf2ff135a7d3a5266727d7a562046f998e8edf9c568a0b20de7ddd
+  md5: 97eb87f2704fc5212a05b5fb6202ace0
   depends:
   - __glibc >=2.17,<3.0.a0
   - contourpy >=1.0.1
@@ -17898,11 +17898,11 @@ packages:
   license_family: PSF
   purls:
   - pkg:pypi/matplotlib?source=compressed-mapping
-  size: 8850583
-  timestamp: 1785163459521
-- conda: https://conda.anaconda.org/conda-forge/linux-aarch64/matplotlib-base-3.11.1-py312h7ee55d7_1.conda
-  sha256: 98545a4c02a892ae67ee08b086e7aac4f92a68b24ecb872d50938b58b87fbc0a
-  md5: 7559ed1516476e7552472ff151646bfd
+  size: 8931979
+  timestamp: 1785211134185
+- conda: https://conda.anaconda.org/conda-forge/linux-aarch64/matplotlib-base-3.11.1-py312h0683553_2.conda
+  sha256: 2a6447ea4551d94a09a0cf6665c2b7402f29ebc2a1df13e6bbfe7be7fc33b596
+  md5: 381100cdfe0a7b585d7cc6477b7461f8
   depends:
   - contourpy >=1.0.1
   - cycler >=0.10
@@ -17927,12 +17927,12 @@ packages:
   license: PSF-2.0
   license_family: PSF
   purls:
-  - pkg:pypi/matplotlib?source=compressed-mapping
-  size: 8794979
-  timestamp: 1785163437767
-- conda: https://conda.anaconda.org/conda-forge/osx-64/matplotlib-base-3.11.1-py312ha85c1d5_1.conda
-  sha256: 779653bf778a529953f3657701958e2aa86c5f26a5f0c4f3bb5695c6aa6d667a
-  md5: 792eb0d0c01f8bbf4253cec95d6f12af
+  - pkg:pypi/matplotlib?source=hash-mapping
+  size: 8779090
+  timestamp: 1785211047525
+- conda: https://conda.anaconda.org/conda-forge/osx-64/matplotlib-base-3.11.1-py312h0847896_2.conda
+  sha256: 2603e6788c57c1dbacee802068d057275faabcc87980197bbb53866a675d1f00
+  md5: fee1ad20b011c8c17da020aac61331ed
   depends:
   - __osx >=11.0
   - contourpy >=1.0.1
@@ -17956,12 +17956,12 @@ packages:
   license: PSF-2.0
   license_family: PSF
   purls:
-  - pkg:pypi/matplotlib?source=compressed-mapping
-  size: 8905595
-  timestamp: 1785164070940
-- conda: https://conda.anaconda.org/conda-forge/osx-arm64/matplotlib-base-3.11.1-py312h3b4889c_1.conda
-  sha256: de742c8614298b59d3105fb87c12f74bb11c9c0901667cfcf3684a70c4161e93
-  md5: 3eb0474090edc96115900d5a0b9fc6a4
+  - pkg:pypi/matplotlib?source=hash-mapping
+  size: 8826282
+  timestamp: 1785211793910
+- conda: https://conda.anaconda.org/conda-forge/osx-arm64/matplotlib-base-3.11.1-py312h07c8dfe_2.conda
+  sha256: 43c6f6494d183a3214c9acca05f6c477ace507f48785719c7c315aca4b0654a0
+  md5: 6aecfe9840c1b1f5e613792c4720957a
   depends:
   - __osx >=11.0
   - contourpy >=1.0.1
@@ -17985,12 +17985,12 @@ packages:
   license: PSF-2.0
   license_family: PSF
   purls:
-  - pkg:pypi/matplotlib?source=compressed-mapping
-  size: 8833137
-  timestamp: 1785163548845
-- conda: https://conda.anaconda.org/conda-forge/win-64/matplotlib-base-3.11.1-py312hcbcab24_1.conda
-  sha256: 355b00245d60a7e7aa13800fab87b29165c323c7fd09326d706a403244adddaa
-  md5: d82d0988ae300051dd3060da5d7fb0b4
+  - pkg:pypi/matplotlib?source=hash-mapping
+  size: 8512237
+  timestamp: 1785211085233
+- conda: https://conda.anaconda.org/conda-forge/win-64/matplotlib-base-3.11.1-py312hf9659c1_2.conda
+  sha256: fd9f539f0f3e6f42767f86e3c2dca078c61c8645934c758084edbe0ee5aac2d5
+  md5: a3871999aaea72bdf1cd63937ae3560c
   depends:
   - contourpy >=1.0.1
   - cycler >=0.10
@@ -18015,9 +18015,9 @@ packages:
   license: PSF-2.0
   license_family: PSF
   purls:
-  - pkg:pypi/matplotlib?source=hash-mapping
-  size: 8435649
-  timestamp: 1785163683002
+  - pkg:pypi/matplotlib?source=compressed-mapping
+  size: 8552788
+  timestamp: 1785211288476
 - conda: https://conda.anaconda.org/conda-forge/noarch/matplotlib-inline-0.2.2-pyhd8ed1ab_0.conda
   sha256: 35b43d7343f74452307fd018a1cca92b8f68961ff8e2ab6a81ce0a703c9a3764
   md5: 9acc1c385be401d533ff70ef5b50dae6
