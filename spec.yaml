@@ -51,22 +51,11 @@ rjsf-overrides:
         opacity: 0.5
 
     # --- Patrol Track Density Map: density calculation (time / distance / LTD) ---
-    # Percentile Levels (LTD bins) comes from the set_patrol_weighting_spec
-    # signature as an ecoscope:advanced field with the LTD defaults, so it sits
-    # in the card's Advanced Configurations accordion (patrols Time Density Map
-    # parity). It cannot ALSO be gated on the Normalised (LTD) selection: the
-    # renderer's advanced-accordion split reads each task's raw base properties
-    # and never resolves allOf/if/then (CustomObjectFieldTemplate.tsx), so a
-    # then-revealed field can't join the accordion. Time/Distance ignore it.
+    # The dropdown's title/description/labels and the LTD-only Percentile
+    # Levels reveal all come from the task's PatrolWeightingSelection model
+    # (StatSummaryParam-style dependencies + SkipJsonSchema), so no conditional
+    # overrides are needed here.
     "Patrol Track Density Map.properties.density_weighting.title": ""
-    "Patrol Track Density Map.properties.density_weighting.properties.density_sum_column.title": "Density Calculation"
-    "Patrol Track Density Map.properties.density_weighting.properties.density_sum_column.description": >-
-      Weight each grid cell by total patrol time (hours) or distance traveled (km),
-      or show normalised linear time density (LTD) as percentiles of total patrol time.
-    "Patrol Track Density Map.properties.density_weighting.properties.density_sum_column.default": "timespan_seconds"
-    "Patrol Track Density Map.properties.density_weighting.properties.percentiles.description": >-
-      Choose the time density percentile bins to display. Only applies to the
-      Normalised (LTD) density calculation.
     "Patrol Track Density Map.properties.density_grid_options.title": ""
 
     # --- Filter Data: patrol track filters ---

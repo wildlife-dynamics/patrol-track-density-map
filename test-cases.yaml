@@ -22,7 +22,8 @@ base:
     groupers:
       groupers: []                      # single view; set a grouper to split
     density_weighting:
-      density_sum_column: timespan_seconds
+      weighting:
+        density_sum_column: timespan_seconds
     base_map_defs:
       base_maps:
         - url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}"
@@ -52,7 +53,8 @@ distance:
     groupers:
       groupers: []
     density_weighting:
-      density_sum_column: dist_meters
+      weighting:
+        density_sum_column: dist_meters
     base_map_defs:
       base_maps:
         - url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}"
@@ -87,7 +89,8 @@ grouped:
         - index_name: "patrol_serial_number"
         - temporal_index: "%B"
     density_weighting:
-      density_sum_column: timespan_seconds
+      weighting:
+        density_sum_column: timespan_seconds
     base_map_defs:
       base_maps:
         - url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}"
@@ -120,7 +123,8 @@ advanced-config:
     groupers:
       groupers: []
     density_weighting:
-      density_sum_column: dist_meters
+      weighting:
+        density_sum_column: dist_meters
     density_grid_options:              # the Advanced Configurations accordion
       opacity: 0.5
       auto_scale_or_custom_cell_size:
@@ -159,7 +163,8 @@ mep_dev:
     groupers:
       groupers: []
     density_weighting:
-      density_sum_column: timespan_seconds
+      weighting:
+        density_sum_column: timespan_seconds
     base_map_defs:
       base_maps:
         - url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}"
@@ -191,7 +196,8 @@ ltd:
     groupers:
       groupers: []
     density_weighting:
-      density_sum_column: normalised_ltd
+      weighting:
+        density_sum_column: normalised_ltd
     base_map_defs:
       base_maps:
         - url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}"
@@ -223,8 +229,9 @@ ltd-percentiles:
     groupers:
       groupers: []
     density_weighting:
-      density_sum_column: normalised_ltd
-      percentiles: ["50", "90", "100"]
+      weighting:
+        density_sum_column: normalised_ltd
+        percentiles: ["50", "90", "100"]
     base_map_defs:
       base_maps:
         - url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}"
