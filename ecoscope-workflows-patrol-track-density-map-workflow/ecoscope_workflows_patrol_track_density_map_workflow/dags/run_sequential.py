@@ -6,6 +6,9 @@ from ecoscope.platform.tasks.analysis import (
     calculate_classified_track_density as calculate_classified_track_density,
 )
 from ecoscope.platform.tasks.analysis import (
+    get_density_colormap as get_density_colormap,
+)
+from ecoscope.platform.tasks.analysis import (
     get_density_legend_title as get_density_legend_title,
 )
 from ecoscope.platform.tasks.analysis import (
@@ -630,6 +633,26 @@ def main(params: dict[str, Any], validate_params_schema: bool = True):
         .call()
     )
 
+    density_colormap_name = (
+        task(get_density_colormap)
+        .validate()
+        .set_task_instance_id("density_colormap_name")
+        .handle_errors()
+        .with_tracing()
+        .skipif(
+            conditions=[
+                any_is_empty_df,
+                any_dependency_skipped,
+            ],
+            unpack_depth=1,
+        )
+        .partial(
+            weighting_spec=density_weighting,
+            **(params.get("density_colormap_name") or {}),
+        )
+        .call()
+    )
+
     density_colormap = (
         task(apply_color_map)
         .validate()
@@ -645,7 +668,7 @@ def main(params: dict[str, Any], validate_params_schema: bool = True):
         )
         .partial(
             input_column_name="density_bins",
-            colormap="RdYlGn_r",
+            colormap=density_colormap_name,
             output_column_name="density_colormap",
             **(params.get("density_colormap") or {}),
         )

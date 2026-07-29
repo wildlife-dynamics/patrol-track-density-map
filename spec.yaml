@@ -355,12 +355,20 @@ workflow:
         partial:
           weighting_spec: ${{ workflow.density_weighting.return }}
 
+      # Colormap direction is mode-dependent: sums are green->red, but LTD
+      # percentiles flip (the lowest isopleth is the densest core -> red).
+      - name: Density Colormap Name
+        id: density_colormap_name
+        task: get_density_colormap
+        partial:
+          weighting_spec: ${{ workflow.density_weighting.return }}
+
       - name: Density Colormap
         id: density_colormap
         task: apply_color_map
         partial:
           input_column_name: density_bins
-          colormap: RdYlGn_r
+          colormap: ${{ workflow.density_colormap_name.return }}
           output_column_name: density_colormap
         mapvalues:
           argnames: df
