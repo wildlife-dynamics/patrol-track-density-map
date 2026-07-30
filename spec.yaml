@@ -1,16 +1,8 @@
 id: patrol_track_density_map
 
 requirements:
-  # DEV MODE: editable local ecoscope (platform extra) for verifying the
-  # Normalised (LTD) weighting; lonboard pinned so strict channel priority
-  # doesn't exclude the 0.0.8 build ecoscope requires (mt-patrols pattern).
-  # Requires the ltd-patrol-density-weighting branch checked out.
-  - name: ecoscope
-    path: /Users/yunwu/MEP/wt-tasks/ecoscope
-    editable: true
-    extras: ["platform", "mapping", "analysis"]
-  - name: lonboard
-    version: "==0.0.8"
+  - name: ecoscope-platform
+    version: ">=2.17.2, <2.18.0"
     channel: https://repo.prefix.dev/ecoscope-workflows/
   - name: ecoscope-workflows-ext-custom
     version: 0.1.0rc18

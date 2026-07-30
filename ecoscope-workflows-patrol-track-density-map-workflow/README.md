@@ -5,12 +5,12 @@
 
 ```yaml
 # fingerprint:
-artifacts_sha256_basic: 9479f3a11edd4a0cc0fc0dd763bdf63592e0cf3bd9a62d8266860d1d2c22c525
-artifacts_sha256_strict: c7fe4a7c853d2e59d52ac1eb66fe9f0042fb82cf035df1fab47f66b9079b1e4f
+artifacts_sha256_basic: c1796ee0dbe541a4a3bc626e67b7758c97eccc9f4aa1ca48983a840ad1f2413b
+artifacts_sha256_strict: fef4f06ea8cc58d6fd4a872b7989ed2cab3e14d0a23e59fb03528a3094c4237f
 installed_requirements:
 - channel: https://repo.prefix.dev/ecoscope-workflows/
-  name: lonboard
-  version: {version: ==0.0.8}
+  name: ecoscope-platform
+  version: {version: ==2.17.3}
 - channel: https://repo.prefix.dev/ecoscope-workflows-custom/
   name: ecoscope-workflows-ext-custom
   version: {version: ==0.1.0rc18}
