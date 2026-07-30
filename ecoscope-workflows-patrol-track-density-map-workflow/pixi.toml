@@ -19,8 +19,8 @@ platforms = [
 [system-requirements]
 linux = "4.4.0"
 
-[dependencies.lonboard]
-version = "==0.0.8"
+[dependencies.ecoscope-platform]
+version = ">=2.17.2,<2.18.0"
 channel = "https://repo.prefix.dev/ecoscope-workflows/"
 
 [dependencies.ecoscope-workflows-ext-custom]
@@ -51,20 +51,11 @@ channel = "https://conda.anaconda.org/conda-forge/"
 version = ">=1.20.0,<2.0.0"
 channel = "https://conda.anaconda.org/conda-forge/"
 
-[dependencies.wt-task]
+[dependencies.wt-task-gcp]
 version = ">=0.1.3,<1.0.0"
 channel = "https://repo.prefix.dev/ecoscope-workflows/"
 
-[pypi-dependencies.ecoscope]
-path = "/Users/yunwu/MEP/wt-tasks/ecoscope"
-editable = true
-extras = [
-    "platform",
-    "mapping",
-    "analysis",
-]
-
-[feature.runner.dependencies.wt-runner]
+[feature.runner.dependencies.wt-runner-gcp]
 version = ">=0.3.0,<1.0.0"
 channel = "https://repo.prefix.dev/ecoscope-workflows/"
 
