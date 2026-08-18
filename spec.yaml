@@ -69,8 +69,9 @@ rjsf-overrides:
           title: "Index Name"
           type: "string"
           oneOf:
-            # patrol_type__value: the trajectory branch keeps that column name
-            # after the extra__ prefix rename (patrol-efforts pattern).
+            # patrol_type__value: historical grouper-key name kept for saved
+            # configs; the column is sourced from extra__patrol_type__display
+            # in traj_rename_cols, so values are human-readable type names.
             - const: "patrol_serial_number"
               title: "Patrol Serial Number"
             - const: "patrol_type__value"
@@ -282,7 +283,10 @@ workflow:
             extra__patrol_subject: patrol_subject
             extra__patrol_id: patrol_id
             extra__patrol_serial_number: patrol_serial_number
-            extra__patrol_type__value: patrol_type__value
+            # patrol_type__value keeps its historical grouper-key name (saved
+            # configs reference it) but now carries the ER display name (e.g.
+            # "Wildlife Sighting"), not the value slug.
+            extra__patrol_type__display: patrol_type__value
             extra__patrol_status: patrol_status
           raise_if_not_found: false   # patrol_type__value / patrol_status only needed if used as category
 

@@ -87,6 +87,9 @@ grouped:
     groupers:
       groupers:
         - index_name: "patrol_serial_number"
+        # exercises the display-name sourcing (view label "Ecoscope Patrol",
+        # not the ecoscope_patrol slug)
+        - index_name: "patrol_type__value"
         - temporal_index: "%B"
     density_weighting:
       weighting:
