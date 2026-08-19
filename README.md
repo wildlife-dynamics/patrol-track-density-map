@@ -174,7 +174,7 @@ The workflow creates an interactive dashboard with one main visualization:
 
 If you configured groupers in **Group Data**, the dashboard includes a filter control that lets you switch between per-group map views:
 
-- **Category grouper** (e.g., Patrol Type): One density map per patrol type value
+- **Category grouper** (e.g., Patrol Type): One density map per patrol type, labeled with the patrol type's display name from EarthRanger (e.g., "Wildlife Sighting")
 - **Time grouper** (e.g., Month): One density map per time period (e.g., January, February)
 - **Both**: One map per combination (e.g., each patrol serial number in each month)
 
